@@ -15,14 +15,31 @@ class JsonHomePage extends StatefulWidget {
 
 class _JsonHomePageState extends State<JsonHomePage> {
   List<Post?> item =[];
+  bool loader = true;
+  bool update = false;
+  bool create = false;
+  int updateId =0;
+  int userId = 0;
+  final TextEditingController _updateControllerTitle = TextEditingController();
+  final TextEditingController _updateControllerBody = TextEditingController();
+  final TextEditingController _ControllerBody = TextEditingController();
+  final TextEditingController _ControllerTitle = TextEditingController();
+  final TextEditingController _ControllerId = TextEditingController();
+  final TextEditingController _ControllerUserId = TextEditingController();
+
   @override
 
-
+  void ApiPostEdit(int id ,String title , String body , int userId)async{
+    var response = await Network.PUT(Network.API_UPDATE + id.toString(), Network.paramsUpdate(Post(id: id, title: title, body: body, userId: userId)));
+    LogService.d(response.toString());
+  }
   void ApiPostList() async{
     var response = await Network.GET(Network.API_LIST, Network.paramsEmpty());
     if(response != null){
+        bool loader ;
         item = Network.parsePostList(response);
         LogService.d('$item');
+
     }else{
       item = [];
     }
@@ -31,6 +48,10 @@ class _JsonHomePageState extends State<JsonHomePage> {
   void DelPost(String id) async{
     var respomse = await Network.DEL(Network.API_DELETE + id, Network.paramsEmpty());
     print(respomse);
+  }
+
+  void ApiCreatePost(int id , String title , String body , int userId){
+    var response = Network.POST(Network.API_CREATE, Network.paramsCreate(Post(id: id, title: title, body: body, userId: userId)));
   }
  void initState() {
     // TODO: implement initState
@@ -43,26 +64,46 @@ class _JsonHomePageState extends State<JsonHomePage> {
       appBar: AppBar(
         title: Text('list'),
       ),
-      body: Center(
-        child: ListView.builder(
-            itemCount: item.length,
-            itemBuilder: (context , index){
-              return itemOfPost(item[index]!);
-            }
-        )
+      body: create ? createPost(): Stack(
+        children: [
+         loader ? Center(
+              child: update? updatePost() : ListView.builder(
+                  itemCount: item.length,
+                  itemBuilder: (context , index){
+                    return itemOfPost(item[index]!);
+                  }
+              )
+          ): Center(child: CircularProgressIndicator()),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+          onPressed: (){
+            setState(() {
+              create = true;
+            });
+          },
+          tooltip: 'Increment',
+          child: Icon(Icons.add),
+
       ),
     );
   }
   Widget itemOfPost(Post post) {
     return Slidable(
-      key: ValueKey(post.id), // Har bir element uchun unikal kalit
+      key: ValueKey(post.id),
       startActionPane: ActionPane(
         motion: const ScrollMotion(),
         children: [
           SlidableAction(
             onPressed: (context) {
-              // Yangilash funksiyasi
-              LogService.i('Update pressed for ${post.title}');
+              setState(() {
+                update = true;
+                _updateControllerTitle.text = post.title;
+                _updateControllerBody.text= post.body;
+                updateId = post.id;
+                userId = post.userId;
+              });
+
             },
             backgroundColor: Colors.green,
             foregroundColor: Colors.white,
@@ -95,5 +136,106 @@ class _JsonHomePageState extends State<JsonHomePage> {
     );
   }
 
+  Widget updatePost(){
+    return Container(
+        padding: EdgeInsets.all(30),
+        child: Column(
+          children: [
+            TextField(
+              controller: _updateControllerTitle,
+              decoration: InputDecoration(
+                labelText: "titni yangilang",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(
+              height: 20,
+            ),
+            TextField(
+              controller: _updateControllerBody,
+              decoration: InputDecoration(
+                labelText: "bodyni yangilang",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(
+              height: 20,
+            ),
+            ElevatedButton(
+              onPressed: (){
+                setState(() {
+                  update = false;
+                  ApiPostEdit(updateId, _updateControllerTitle.text, _updateControllerBody.text, userId);
+                });
+              },
+              child: Text("Yangilash"),
+            ),
+          ],
+        ),
+    );
+  }
+
+  Widget createPost(){
+    return Container(
+      padding: EdgeInsets.all(30),
+      child: Column(
+        children: [
+          TextField(
+            controller: _ControllerId,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+
+              labelText: "id",
+              border: OutlineInputBorder(),
+            ),
+          ),
+          SizedBox(
+            height: 20,
+          ),
+          TextField(
+            controller: _ControllerTitle,
+            decoration: InputDecoration(
+              labelText: "titni yarat",
+              border: OutlineInputBorder(),
+            ),
+          ),
+          SizedBox(
+            height: 20,
+          ),
+          TextField(
+            controller: _ControllerBody,
+            decoration: InputDecoration(
+              labelText: "bodyni yarat",
+              border: OutlineInputBorder(),
+            ),
+          ),
+          SizedBox(
+            height: 20,
+          ),
+          TextField(
+            controller: _ControllerUserId,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+
+              labelText: "userId",
+              border: OutlineInputBorder(),
+            ),
+          ),
+          SizedBox(
+            height: 20,
+          ),
+          ElevatedButton(
+            onPressed: (){
+              setState(() {
+                create = false;
+                ApiCreatePost(int.parse(_ControllerId.text), _ControllerTitle.text, _ControllerBody.text, int.parse(_ControllerUserId.text));
+              });
+            },
+            child: Text("yaratish"),
+          ),
+        ],
+      ),
+    );
+  }
 
 }

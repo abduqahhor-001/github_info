@@ -34,7 +34,7 @@ class Network {
     var uri = Uri.https(BASE, api); // http or https
     var response = await post(uri, headers: headers,body: jsonEncode(params));
     if (response.statusCode == 200 || response.statusCode == 201) {
-
+      print('yaratildi');
       return response.body;
     }
     return null;
