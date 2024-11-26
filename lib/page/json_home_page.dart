@@ -27,6 +27,11 @@ class _JsonHomePageState extends State<JsonHomePage> {
       item = [];
     }
   }
+
+  void DelPost(String id) async{
+    var respomse = await Network.DEL(Network.API_DELETE + id, Network.paramsEmpty());
+    print(respomse);
+  }
  void initState() {
     // TODO: implement initState
     super.initState();
@@ -71,8 +76,8 @@ class _JsonHomePageState extends State<JsonHomePage> {
         children: [
           SlidableAction(
             onPressed: (context) {
-              // O'chirish funksiyasi
-              LogService.i('Delete pressed for ${post.title}');
+              DelPost(post.id.toString());
+
             },
             backgroundColor: Colors.red,
             foregroundColor: Colors.white,

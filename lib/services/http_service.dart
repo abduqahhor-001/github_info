@@ -45,6 +45,7 @@ class Network {
     var response = await put(uri, headers: headers,body: jsonEncode(params));
     if (response.statusCode == 200) {
       return response.body;
+
     }
     return null;
   }
@@ -53,6 +54,7 @@ class Network {
     var uri = Uri.https(BASE, api, params); // http or https
     var response = await delete(uri, headers: headers);
     if (response.statusCode == 200) {
+      print('ajoyib');
       return response.body;
     }
     return null;
