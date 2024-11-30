@@ -44,6 +44,7 @@ class Network {
     var uri = Uri.https(BASE, api); // http or https
     var response = await put(uri, headers: headers,body: jsonEncode(params));
     if (response.statusCode == 200) {
+      LogService.d("yangilandi");
       return response.body;
 
     }
