@@ -1,99 +1,107 @@
 import 'dart:convert';
 
 import 'package:github_info/services/log_service.dart';
-import 'package:http/http.dart';
-
+import 'package:dio/dio.dart';
 import '../model/post_model.dart';
 
-
 class Network {
-  static String BASE = "jsonplaceholder.typicode.com";
-  static Map<String,String> headers = {'Content-Type':'application/json; charset=UTF-8'};
+  static String BASE = "https://jsonplaceholder.typicode.com";
+  static Map<String, String> headers = {'Content-Type': 'application/json; charset=UTF-8'};
 
-  /* Http Apis */
-
+  /* API Endpoints */
   static String API_LIST = "/posts";
   static String API_CREATE = "/posts";
-  static String API_UPDATE = "/posts/"; //{id}
-  static String API_DELETE = "/posts/"; //{id}
+  static String API_UPDATE = "/posts/"; // {id}
+  static String API_DELETE = "/posts/"; // {id}
 
-  /* Http Requests */
+  static Dio dio = Dio();
 
+  // GET so'rovi
   static Future<String?> GET(String api, Map<String, String> params) async {
-    var uri = Uri.https(BASE, api, params); // http or https
-    var response = await get(uri, headers: headers);
-    if (response.statusCode == 200) {
-      LogService.d(response.body);
-      return response.body;
+    try {
+      Response response = await dio.get(BASE + api, queryParameters: params, options: Options(headers: headers));
+      if (response.statusCode == 200) {
+        LogService.d(response.data.toString());
+        return response.data.toString();
+      }
+    } catch (e) {
+      LogService.d("GET request failed: $e");
     }
     return null;
   }
 
+  // POST so'rovi
   static Future<String?> POST(String api, Map<String, String> params) async {
-    print(params.toString());
-    var uri = Uri.https(BASE, api); // http or https
-    var response = await post(uri, headers: headers,body: jsonEncode(params));
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      print('yaratildi');
-      return response.body;
+    try {
+      Response response = await dio.post(BASE + api,
+          data: jsonEncode(params), options: Options(headers: headers));
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('Yaratildi');
+        return response.data.toString();
+      }
+    } catch (e) {
+      LogService.d("POST request failed: $e");
     }
     return null;
   }
 
+  // PUT so'rovi
   static Future<String?> PUT(String api, Map<String, String> params) async {
-    var uri = Uri.https(BASE, api); // http or https
-    var response = await put(uri, headers: headers,body: jsonEncode(params));
-    if (response.statusCode == 200) {
-      LogService.d("yangilandi");
-      return response.body;
-
+    try {
+      Response response = await dio.put(BASE + api,
+          data: jsonEncode(params), options: Options(headers: headers));
+      if (response.statusCode == 200) {
+        LogService.d("Yangilandi");
+        return response.data.toString();
+      }
+    } catch (e) {
+      LogService.d("PUT request failed: $e");
     }
     return null;
   }
 
+  // DELETE so'rovi
   static Future<String?> DEL(String api, Map<String, String> params) async {
-    var uri = Uri.https(BASE, api, params); // http or https
-    var response = await delete(uri, headers: headers);
-    if (response.statusCode == 200) {
-      print('ajoyib');
-      return response.body;
+    try {
+      Response response = await dio.delete(BASE + api,
+          data: jsonEncode(params), options: Options(headers: headers));
+      if (response.statusCode == 200) {
+        print('Ajoyib');
+        return response.data.toString();
+      }
+    } catch (e) {
+      LogService.d("DELETE request failed: $e");
     }
     return null;
   }
 
-  /* Http Params */
+  /* HTTP Params */
 
   static Map<String, String> paramsEmpty() {
-    Map<String, String> params = new Map();
-    return params;
+    return {};
   }
 
   static Map<String, String> paramsCreate(Post post) {
-    Map<String, String> params = new Map();
-    params.addAll({
+    return {
       'title': post.title,
       'body': post.body,
       'userId': post.userId.toString(),
-    });
-    return params;
+    };
   }
 
   static Map<String, String> paramsUpdate(Post post) {
-    Map<String, String> params = new Map();
-    params.addAll({
+    return {
       'id': post.id.toString(),
       'title': post.title,
       'body': post.body,
       'userId': post.userId.toString(),
-    });
-    return params;
+    };
   }
 
-  // parsing
-
-static List<Post> parsePostList(String response){
+  // Parsing response to Post list
+  static List<Post> parsePostList(String response) {
     dynamic json = jsonDecode(response);
-    var data = List<Post>.from(json.map((x)=>Post.fromJson(x)));
+    var data = List<Post>.from(json.map((x) => Post.fromJson(x)));
     return data;
-}
+  }
 }
